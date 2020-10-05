@@ -1,0 +1,78 @@
+
+eval:
+  eval_set: 'valid'
+  visualization: True
+  num_episodes: 100
+  start_idx: 0 # start_idx past n_history
+  episode_length: [10, 15] # 10 timesteps
+  T_aug: # this portion not used by collect_episodes script . . . .
+    pos_min: [-0.2, -0.2, 0]
+    pos_max: [0.2, 0.2, 0]
+    yaw_min: 0
+    yaw_max: 6.28
+  replan:
+    True
+
+mpc:
+  mpc_dy_epoch: -1
+  mpc_dy_iter: -1
+  num_episodes: 10
+  num_timesteps: 35
+  optim_type: mppi      # mppi/cem/gd
+  n_look_ahead: 10
+  use_fixed_mpc_horizon: False
+  add_noise_to_observation: False # whether to add noise to observation during MPC rollouts
+
+  mppi: # model predictive path integral
+    beta_filter: 0.7
+    reward_weight: 20.
+    action_sampling:
+      sigma: 0.05
+      noise_type: 'normal'
+    n_sample: 1000
+    action_lower_lim: [-0.3, -0.3] # large enough not to bind
+    action_upper_lim: [0.3, 0.3]
+    n_update_iter_init: 3   # optimization steps for the first update ~ planning
+    n_update_iter: 3
+    terminal_cost_only: True
+    cost_norm: 2
+    angle_min_deg: 0
+    angle_max_deg: 360
+    angle_step_deg: 1
+    vel_min: 0.15
+    vel_max: 0.25
+    vel_step: 0.01
+
+
+
+  random_shooting:
+    angle_min_deg: 0
+    angle_max_deg: 360
+    angle_step_deg: 1
+    vel_min: 0.15
+    vel_max: 0.25
+    vel_step: 0.01
+    terminal_cost_only: True
+    cost_norm: 2
+
+  gradient_descent:
+    angle_min_deg: 0
+    angle_max_deg: 360
+    angle_step_deg: 1
+    vel_min: 0.15
+    vel_max: 0.25
+    vel_step: 0.01
+    terminal_cost_only: True
+    cost_norm: 2
+    beta_filter: 0.7
+    action_sampling:
+      sigma: 0.05
+      noise_type: 'normal'
+    n_sample: 1000
+    n_update_iter: 5
+    action_lower_lim: [-0.3, -0.3] # large enough not to bind
+    action_upper_lim: [0.3, 0.3]
+    learning_rate: 0.1
+
+
+

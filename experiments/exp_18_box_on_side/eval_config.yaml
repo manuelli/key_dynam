@@ -1,0 +1,60 @@
+
+eval:
+  eval_set: 'valid'
+  visualization: True
+  num_episodes: 100
+  start_idx: 0 # start_idx past n_history
+  episode_length: [10, 15] # 10 timesteps
+  T_aug:
+    pos_min: [-0.2, -0.2, 0]
+    pos_max: [0.2, 0.2, 0]
+    yaw_min: 0
+    yaw_max: 6.28
+  replan:
+    True
+
+mpc:
+  mpc_dy_epoch: -1
+  mpc_dy_iter: -1
+  num_episodes: 10
+  num_timesteps: 35
+  optim_type: mppi      # mppi/cem/gd
+  n_look_ahead: 10
+  use_fixed_mpc_horizon: False
+  add_noise_to_observation: False # whether to add noise to observation during MPC rollouts
+  terminal_cost_only: True
+  cost_norm: 2
+
+  mppi: # model predictive path integral
+    beta_filter: 0.7
+    reward_weight: 20.
+    action_sampling:
+      sigma: 0.05
+    n_sample: 1000
+    action_lower_lim: [-0.3, -0.3] # large enough not to bind
+    action_upper_lim: [0.3, 0.3]
+    n_update_iter_init: 30   # optimization steps for the first update ~ planning
+    n_update_iter: 10
+
+
+  random_shooting:
+    angle_min_deg: 0
+    angle_max_deg: 360
+    angle_step_deg: 1
+    vel_min: 0.15
+    vel_max: 0.25
+    vel_step: 0.01
+
+
+
+eval_transporter:
+  eval_ckp_dir: ""
+  eval_set: 'valid'
+  eval_epoch: -1
+  eval_iter: -1
+  num_episodes: 10
+  width_demo: 256
+  height_demo: 256
+  image: True
+  video: True
+

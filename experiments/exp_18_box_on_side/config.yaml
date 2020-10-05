@@ -1,0 +1,190 @@
+env:
+  type: "DrakePusherSlider"
+  model_name: "sugar_box"
+  table:
+    size: [0.8, 0.8, 0.1]
+    color: [0.5, 0.5, 0.5, 1.] # RGBA
+    coulomb_friction: [0.9, 0.8] # static, dynamic friction
+  mbp_dt: 0.001 # dt for multibody plant
+  step_dt: 0.1 # 10Hz
+  target_realtime_rate: 1.0
+  rgbd_sensors:
+    enabled: True
+    sensor_list:
+      camera_1_top_down: # top down view
+        width: 640
+        height: 480
+        fov_y: 0.7051130178057091 # 40.4 degrees, from d415 specs https://www.intelrealsense.com/stereo-depth-modules-and-processors/
+        z_near: 0.0 # should probably just leave these so it's perfect
+        z_far: 10.0 # if they are -1 then use defaults
+        pos: [0.        , 0.        , 1.2]
+        quat: [ 0.00725556, -0.70699354,  0.70715023, -0.00678551]
+      camera_2_top_down_rotated: # top down view
+        width: 640
+        height: 480
+        fov_y: 0.7051130178057091 # 40.4 degrees, from d415 specs https://www.intelrealsense.com/stereo-depth-modules-and-processors/
+        z_near: 0.0 # should probably just leave these so it's perfect
+        z_far: 10.0 # if they are -1 then use defaults
+        pos: [0.        , 0.        , 1.2]
+        quat: [-2.90391680e-04,  9.99942179e-01,  4.11730214e-03,  9.92985244e-03]
+      camera_angled: # 45 degree view
+        width: 640
+        height: 480
+        fov_y: 0.7051130178057091 # 40.4 degrees, from d415 specs https://www.intelrealsense.com/stereo-depth-modules-and-processors/
+        z_near: 0.0 # should probably just leave these so it's perfect
+        z_far: 10.0 # if they are -1 then use defaults
+        pos: [-0.01719689, -0.905026  ,  0.73073582]
+        quat: [-0.41302513,  0.91071233,  0.00146578,  0.00333843]
+      camera_angled_rotated: # 45 degree view
+        width: 640
+        height: 480
+        fov_y: 0.7051130178057091 # 40.4 degrees, from d415 specs https://www.intelrealsense.com/stereo-depth-modules-and-processors/
+        z_near: 0.0 # should probably just leave these so it's perfect
+        z_far: 10.0 # if they are -1 then use defaults
+        pos: [ 0.905026  , -0.01719689,  0.73073582]
+        quat: [-0.2944135 ,  0.6429344 ,  0.64500733, -0.28969224]
+  observation:
+    rgbd: True # whether to store image observations or not
+dataset:
+  num_episodes: 500 # only used during data generation
+  num_episodes_per_file: 10 # only used during data generation
+  max_num_episodes: -1 # optional max num episodes when loading dataset, used for trimming datset
+  num_timesteps: 30 # only used during data generation
+  state_dim: 18 # pusher position-3D (3) + 5 box keypoints-3D (15) = 18
+  action_dim: 2 # pusher velocity-2D
+  data_generation:
+    exploration_type: "random"
+  data_augmentation:
+    enabled: True
+    type: "homogeneous_transform"
+    pos_min: [-0.4,-0.4,0]
+    pos_max: [0.4, 0.4, 0]
+    yaw_min: -3.2
+    yaw_max: 3.2
+  action_function:
+    type: "drake_pusher_velocity"
+  observation_function:
+    type: "drake_pusher_position_3D"
+  visual_observation:
+    enabled: True
+    descriptor_keypoints_3d_world_frame: True
+    camera_names: ["camera_1_top_down"] # which cameras to get the observations for
+    data_augmentation:
+      keypoints:
+        augment: False # whether or not augmentation is on
+        std_dev: 0.003 # in meters
+
+dynamics_net:
+  model_type: "mlp"
+
+vision_net: # not being used at the moment
+  model_type: "PrecomputedDescriptorNet"
+  camera_name: "camera_1_top_down"
+  descriptor_dim: 3
+  num_ref_descriptors: 16
+
+
+dynamics_net:
+  model_type: "mlp"
+
+eval:
+  eval_set: 'valid'
+  visualization: True
+  num_episodes: 10
+  start_idx: 0 # start_idx past n_history
+  episode_length: [10, 20] # 10 timesteps
+  replan: True
+
+
+mpc:
+  terminal_cost_only: True
+  cost_norm: 2
+
+  random_shooting:
+    angle_min_deg: 0
+    angle_max_deg: 360
+    angle_step_deg: 1
+    vel_min: 0.15
+    vel_max: 0.25
+    vel_step: 0.01
+
+
+perception:
+  dataset_name: "2020-04-23-20-45-12-697915_T_aug_random_velocity_1000_angled_cam"
+  camera_name: "camera_angled"
+  height: 64
+  width: 64
+  scale_size: 64
+  crop_size: 64
+  n_kp: 6 # num keypoints
+  inv_std: 10. # heatmap std_dev
+
+
+train_dynamics:
+  random_seed: 1
+  n_epoch: 1200
+  lr: 1e-4
+  adam_beta1: 0.9
+  batch_size: 64
+  batch_norm: False
+  nf_hidden: 500
+  num_workers: 12
+  train_valid_ratio: 0.83
+  valid_frequency: 5 # validate after this many training epochs
+  log_per_iter: 50
+  ckp_per_iter: 10000
+  resume_epoch: -1
+  resume_iter: -1
+  n_history: 1
+  n_rollout: 10
+#  lr_scheduler:
+#    type: "ReduceLROnPlateau"
+#    patience: 10 # epochs
+#    factor: 0.1 # reduce LR by this factor
+#    threshold: 1e-4
+#    threshold_mode: "rel" # can be ["rel", "abs"]
+#    cooldown: 5
+#    min_lr: 1e-8
+  lr_scheduler:
+    type: "StepLR"
+    enabled: True
+    step_size: 700 # epochs
+    gamma: 0.1 # reduce LR by this factor
+
+  valid_loss_type: 'l2_final_step'
+
+
+train_transporter:
+  random_seed: 42
+  n_epoch: 100
+  lr: 1e-4
+  adam_beta1: 0.9
+  batch_size: 8
+  nf_hidden: 32
+  norm_layer: 'Batch'
+  num_workers: 20
+  train_valid_ratio: 0.83
+  log_per_iter: 100
+  ckp_per_iter: 5000
+  resume_epoch: -1
+  resume_iter: -1
+  lr_scheduler:
+    type: "ReduceLROnPlateau"
+    patience: 10 # epochs
+    factor: 0.1 # reduce LR by this factor
+    threshold: 1e-4
+    threshold_mode: "rel" # can be ["rel", "abs"]
+    cooldown: 5
+    min_lr: 1e-8
+
+
+eval_transporter:
+  eval_ckp_dir: "2020-04-30-04-20-03-410579"
+  eval_set: 'valid'
+  eval_epoch: -1
+  eval_iter: -1
+  num_episodes: 10
+  width_demo: 256
+  height_demo: 256
+  image: True
+  video: True

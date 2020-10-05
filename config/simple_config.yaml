@@ -1,0 +1,140 @@
+env:
+  type: "DrakePusherSlider"
+  model_name: "sugar_box"
+  table:
+    size: [0.8, 0.8, 0.1]
+    color: [0.5, 0.5, 0.5, 1.] # RGBA
+    coulomb_friction: [0.9, 0.8] # static, dynamic friction
+  mbp_dt: 0.001 # dt for multibody plant
+  step_dt: 0.1 # 10Hz
+  target_realtime_rate: 1.0
+  rgbd_sensors:
+    enabled: True
+    sensor_list:
+      camera_1_top_down: # top down view
+        width: 640
+        height: 480
+        fov_y: 0.7051130178057091 # 40.4 degrees, from d415 specs https://www.intelrealsense.com/stereo-depth-modules-and-processors/
+        z_near: 0.0 # should probably just leave these so it's perfect
+        z_far: 10.0 # if they are -1 then use defaults
+        pos: [0.        , 0.        , 1.2]
+        quat: [ 0.00725556, -0.70699354,  0.70715023, -0.00678551]
+      camera_2_top_down_rotated: # top down view
+        width: 640
+        height: 480
+        fov_y: 0.7051130178057091 # 40.4 degrees, from d415 specs https://www.intelrealsense.com/stereo-depth-modules-and-processors/
+        z_near: 0.0 # should probably just leave these so it's perfect
+        z_far: 10.0 # if they are -1 then use defaults
+        pos: [0.        , 0.        , 1.2]
+        quat: [-2.90391680e-04,  9.99942179e-01,  4.11730214e-03,  9.92985244e-03]
+#    camera_0: # 45 degree view
+#      width: 640
+#      height: 480
+#      fov_y: 0.7051130178057091 # 40.4 degrees, from d415 specs https://www.intelrealsense.com/stereo-depth-modules-and-processors/
+#      z_near: 0.0 # should probably just leave these so it's perfect
+#      z_far: 10.0 # if they are -1 then use defaults
+#      pos: [-0.01719689, -0.905026  ,  0.73073582]
+#      quat: [-0.41302513,  0.91071233,  0.00146578,  0.00333843]
+
+  observation:
+    rgbd: True # whether to store image observations or not
+
+dataset:
+  num_episodes: 5 # only used during data generation
+  num_episodes_per_file: 10 # only used during data generation
+  max_num_episodes: -1 # optional max num episodes when loading dataset, used for trimming datset
+  num_timesteps: 100 # only used during data generation
+  state_dim: 34      # pusher position [x, y] + 16*2 descriptors
+  action_dim: 2     # pusher velocity [v_x, v_y]
+  data_generation:
+    exploration_type: "random"
+  action_function:
+    type: "drake_pusher_velocity"
+  observation_function:
+    type: "drake_pusher_pose"
+    data_augmentation: None
+  visual_observation:
+    enabled: False
+    rgb: True
+    depth_int16: False
+    depth_float32: False
+    mask: False
+    label: False
+    descriptor: False
+    descriptor_keypoints: False
+    camera_names: ["camera_1_top_down"] # which cameras to get the observations for
+
+
+dynamics_net:
+  model_type: "mlp"
+
+vision_net:
+  model_type: "PrecomputedDescriptorNet"
+  camera_name: "camera_1_top_down"
+  descriptor_dim: 3
+  num_ref_descriptors: 16
+
+
+train:
+  random_seed: 1
+  n_epoch: 1000
+  lr: 1e-4
+  adam_beta1: 0.9
+  batch_size: 16
+  nf_hidden: 96
+  num_workers: 12
+  train_valid_ratio: 0.9
+  log_per_iter: 20
+  ckp_per_iter: 100
+  resume_epoch: -1
+  resume_iter: -1
+  n_history: 10
+  n_rollout: 10
+  lr_scheduler:
+    enabled: True
+    patience: 10 # epochs
+    factor: 0.1 # reduce LR by this factor
+    threshold: 1e-4
+    threshold_mode: "rel" # can be ["rel", "abs"]
+    cooldown: 5
+    min_lr: 1e-8
+
+
+eval:
+  eval_set: 'valid'
+  visualization: True
+  num_episodes: 10
+  start_idx: 0 # start_idx past n_history
+  episode_length: 10 # 10 timesteps
+
+
+
+mpc:
+  mpc_dy_epoch: -1
+  mpc_dy_iter: -1
+  num_episodes: 10
+  num_timesteps: 35
+  optim_type: mppi      # mppi/cem/gd
+  n_sample: 1000
+  n_look_ahead: 35
+#  n_look_ahead: 10
+  n_update_iter_init: 100   # optimization steps for the first update ~ planning
+  n_update_iter: 30         # optimization steps for the subsequent updates
+  action_lower_lim: [0.17, -0.1] # these are estimated from `sample_pusher_velocity_func()`
+  action_upper_lim: [0.2, 0.1]
+  add_noise_to_observation: False # whether to add noise to observation during MPC rollouts
+
+  mppi: # model predictive path integral
+    beta_filter: 0.7 # probably can leave this at default value of 0.7
+#    reward_weight: 0.01 # probably much too small for DrakePusherSlider after rescaling to fraction of image
+#    reward_weight: 1.4 # e = 0.375% error is 3 pixels at 640 x 480. Then gamma*e**2 = 0.2
+    reward_weight: 3
+    noise:
+      type: "normal"
+      sigma: 0.2
+
+  cem:  # cross entropy method
+
+  gd:   # gradient descent
+
+

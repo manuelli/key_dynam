@@ -1,0 +1,16 @@
+CUDA_VISIBLE_DEVICES=1 python eval.py \
+	--env BallAct \
+	--gauss_std 5e-2 \
+	--n_kp 5 \
+	--nf_hidden 16 \
+	--n_his 5 \
+	--node_attr_dim 0 \
+	--edge_attr_dim 1 \
+	--edge_type_num 3 \
+	--eval_set valid \
+	--store_st_idx 0 \
+	--store_ed_idx 10 \
+	--eval_st_idx 0 \
+	--eval_ed_idx 100 \
+	--eval_dy_epoch -1 \
+	--eval_dy_iter -1

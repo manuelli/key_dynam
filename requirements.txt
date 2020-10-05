@@ -1,0 +1,38 @@
+cffi<=1.12.3
+pycparser==2.19
+pymunk==5.5.0
+numpy>=1.16.0
+torch>=1.2
+torchvision
+tensorboard>=2.0
+matplotlib
+pillow
+h5py
+six
+progressbar2
+opencv-python
+PyYAML
+gym
+pygame
+transforms3d
+sympy
+tinydb
+jupyterlab
+pandas
+imgaug
+pyzmq
+msgpack
+msgpack-numpy
+
+# for meshcat
+tornado
+
+
+
+# part of the standard libraries, don't
+# need to be installed separately
+#itertools
+#os
+#sys
+#argparse
+#random
