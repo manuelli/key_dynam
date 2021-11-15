@@ -1,0 +1,49 @@
+<?xml version="1.0"?>
+<robot name="xy_slide">
+
+  <material name="Blue">
+    <color rgba="0.1 0.1 1.0 1.0"/>
+  </material>
+  <material name="Green">
+    <color rgba="0.1 1.0 0.1 1.0"/>
+  </material>
+  <material name="Red">
+    <color rgba="1.0 0.1 0.1 0.5"/>
+  </material>
+  <material name="Grey">
+    <color rgba="0.3 0.3 0.3 1.0"/>
+  </material>
+
+  <link name="base"/>
+  <link name="slider"/>
+  <link name="end_effector"/>
+
+  <joint name="xslide" type="prismatic">
+    <origin rpy="0 0 0" xyz="0 0 0"/>
+    <axis xyz="1 0 0"/>
+    <parent link="base"/>
+    <child link="slider"/>
+  </joint>
+  <joint name="yslide" type="prismatic">
+    <origin rpy="0 0 0" xyz="0 0 0"/>
+    <axis xyz="0 1 0"/>
+    <parent link="slider"/>
+    <child link="end_effector"/>
+  </joint>
+
+  <transmission name="xslide_transmission">
+    <type>transmission_interface/SimpleTransmission</type>
+    <joint name="xslide"/>
+    <actuator name="xslide_actuator">
+      <mechanicalReduction>1</mechanicalReduction>
+    </actuator>
+  </transmission>
+  <transmission name="yslide_transmission">
+    <type>transmission_interface/SimpleTransmission</type>
+    <joint name="yslide"/>
+    <actuator name="yslide_actuator">
+      <mechanicalReduction>1</mechanicalReduction>
+    </actuator>
+  </transmission>
+
+</robot>
